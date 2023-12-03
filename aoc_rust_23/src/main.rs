@@ -29,5 +29,5 @@ pub mod aoc_reader {
 pub mod day;
 use day::{d1, d2, d3};
 fn main() {
-    day::d3::part1();
+    day::d3::part2();
 }

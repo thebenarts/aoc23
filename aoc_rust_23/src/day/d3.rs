@@ -1,4 +1,5 @@
 use crate::aoc_reader;
+use std::collections::HashMap;
 const DIRECTIONS: [[i32; 2]; 8] = [
     [0, -1],  // left
     [-1, -1], // left up
@@ -123,7 +124,7 @@ fn is_symbol(element: &char) -> bool {
     return !(element.is_ascii_digit() || *element == '.');
 }
 
-fn get_valid_number(input: &Vec<Vec<char>>, row: usize, col: &mut usize) -> u32 {
+fn get_valid_number_forward(input: &Vec<Vec<char>>, row: usize, col: &mut usize) -> u32 {
     let size = input.len();
     let mut num: u32 = 0;
     while *col < size && is_number(&input[row][*col]) {
@@ -156,7 +157,7 @@ pub fn part1() {
                     MovedInDirection::diagonal,
                     true,
                 );
-                let num = get_valid_number(&full_vec, row.clone(), &mut col);
+                let num = get_valid_number_forward(&full_vec, row.clone(), &mut col);
                 if num_is_valid {
                     println!("Num at {},{} is valid {}", row, col, num);
                     result += num;
@@ -167,4 +168,86 @@ pub fn part1() {
         row += 1;
     }
     println!("{}", result);
+}
+
+fn is_asterisk(element: &char) -> bool {
+    return *element == '*';
+}
+
+fn find_number_range(input: &Vec<char>, col: usize) -> (usize, usize) {
+    let size = input.len();
+    let mut start = col as i32;
+    let mut end = col;
+    while start >= 0 && is_number(&input[start as usize]) {
+        start -= 1;
+    }
+    start += 1;
+
+    while end < size && is_number(&input[end]) {
+        end += 1;
+    }
+
+    return (start as usize, end);
+}
+
+fn check_neighours_for_numbers(input: &Vec<Vec<char>>, row: usize, col: usize) -> u32 {
+    let size = input.len();
+    let row: i32 = row as i32;
+    let col: i32 = col as i32;
+    let mut n_ranges: HashMap<String, (usize, usize, usize)> = HashMap::new();
+
+    for (i, mov) in DIRECTIONS.iter().enumerate() {
+        let v = validate_index(row + mov[0], &size);
+        let h = validate_index(col + mov[1], &size);
+        if (v.is_none() || h.is_none()) {
+            continue;
+        }
+        let v = v.unwrap() as usize;
+        let h = h.unwrap() as usize;
+
+        if is_number(&input[v][h]) {
+            let current_range = find_number_range(&input[v], h.clone());
+            let full_range: (usize, usize, usize) = (v, current_range.0, current_range.1);
+            let key: String = v.to_string()
+                + current_range.0.to_string().as_str()
+                + current_range.1.to_string().as_str();
+            // println!(
+            //     "key: {}, row : {}, cols{}, {}",
+            //     key, v, current_range.0, current_range.1
+            // );
+            n_ranges.insert(key, full_range);
+        }
+    }
+
+    if n_ranges.len() == 2 {
+        let mut nums: [u32; 2] = [0, 0];
+        for (i, element) in n_ranges.iter().enumerate() {
+            nums[i] = get_valid_number_forward(&input, element.1 .0, &mut element.1 .1.clone());
+        }
+        println!("{:?}", n_ranges);
+        println!("^ {} --- {}", nums[0], nums[1]);
+        return nums[0] * nums[1];
+    }
+
+    return 0;
+}
+
+pub fn part2() {
+    let mut full_vec = read_input();
+
+    let mut result = 0;
+    let mut row = 0;
+    let mut col = 0;
+    let vec_size = full_vec.len();
+    while row < vec_size {
+        col = 0;
+        while col < vec_size {
+            if is_asterisk(&full_vec[row][col]) {
+                result += check_neighours_for_numbers(&full_vec, row.clone(), col.clone());
+            }
+            col += 1;
+        }
+        row += 1;
+    }
+    println!("result {}", result);
 }
