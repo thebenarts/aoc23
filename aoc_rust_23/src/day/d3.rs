@@ -1,5 +1,6 @@
 use crate::aoc_reader;
 use std::collections::HashMap;
+
 const DIRECTIONS: [[i32; 2]; 8] = [
     [0, -1],  // left
     [-1, -1], // left up
@@ -211,10 +212,6 @@ fn check_neighours_for_numbers(input: &Vec<Vec<char>>, row: usize, col: usize) -
             let key: String = v.to_string()
                 + current_range.0.to_string().as_str()
                 + current_range.1.to_string().as_str();
-            // println!(
-            //     "key: {}, row : {}, cols{}, {}",
-            //     key, v, current_range.0, current_range.1
-            // );
             n_ranges.insert(key, full_range);
         }
     }
